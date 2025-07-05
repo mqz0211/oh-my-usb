@@ -1,6 +1,20 @@
 import os
 import random
 import re
+import warnings
+
+# Suppress syntax warnings
+warnings.filterwarnings("ignore", category=SyntaxWarning)
+
+ASCII_ART = r'''
+
+      _                         _   
+ ___ | |_ ._ _ _  _ _  _ _  ___| |_ 
+/ . \| . || ' ' || | || | |<_-<| . \
+\___/|_|_||_|_|_|`_. |`___|/__/|___/
+                 <___'              
+                    
+'''
 
 # Predefined payloads
 PAYLOADS = {
@@ -91,6 +105,7 @@ def save_payload(payload):
     print(f"Payload saved to {filename}")
 
 def main():
+    print(ASCII_ART)
     print("Evil USB Payload Generator")
     print("[1] Use preset payload")
     print("[2] Write custom payload")
@@ -109,7 +124,7 @@ def main():
         try:
             payload = "\n".join(iter(input, ""))
         except EOFError:
-            pass
+            return
     else:
         print("Invalid option.")
         return
