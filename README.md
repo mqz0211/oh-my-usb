@@ -78,7 +78,9 @@ Do **not** use on targets you don’t have explicit permission to test.
 You are responsible for your actions.
 
 ---
+[![Open in Cloud Shell](https://gstatic.com/cloudssh/images/open-btn.png)](https://ssh.cloud.google.com/cloudshell/editor?cloudshell_git_repo=https://github.com/mqz0211/oh-my-usb&cloudshell_working_dir=oh-my-usb)
 
+---
 ## 🙌 Credits
 
 * Built by \[mqz]
