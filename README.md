@@ -30,7 +30,7 @@ A stealthy Python-powered BadUSB payload generator designed for penetration test
 ```bash
 git clone https://github.com/yourusername/oh-my-usb.git
 cd oh-my-usb
-python3 oh_my_usb.py
+python3 ohmyusb.py
 ```
 
 > Requires Python 3.x
@@ -40,7 +40,7 @@ python3 oh_my_usb.py
 ## 📁 Example Usage
 
 ```bash
-$ python3 oh_my_usb.py
+$ python3 ohmyusb.py
 
 Evil USB Payload Generator
 [1] Use preset payload
