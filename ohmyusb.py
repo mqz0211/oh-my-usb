@@ -4,6 +4,7 @@ import re
 import warnings
 import base64
 import time
+import getpass
 
 # Suppress syntax warnings
 warnings.filterwarnings("ignore", category=SyntaxWarning)
@@ -15,7 +16,7 @@ ASCII_ART = r'''
 / . \| . || ' ' || | || | |<_-<| . \
 \___/|_|_||_|_|_|`_. |`___|/__/|___/
                  <___'              
-                  
+               
 '''
 
 # Predefined payloads
@@ -61,16 +62,21 @@ ENTER
 
 def authorize():
     print("\nAuthorization Required")
-    encoded = "dXNi"  
+    sudo_code = base64.b64decode("c3Vkbw==").decode()  
+    usb_code = base64.b64decode("dXNi").decode()       
     start_time = time.time()
-    entered = input("Enter authorization code (you have 60 seconds): ").strip()
+    entered = getpass.getpass("Enter authorization code (60s limit): ").strip()
     elapsed = time.time() - start_time
     if elapsed > 60:
         print("[!] Authorization timed out. Exiting...")
         exit(1)
-    if entered != base64.b64decode(encoded).decode():
+    if entered not in [sudo_code, usb_code]:
         print("[!] Unauthorized access. Exiting...")
         exit(1)
+    if entered == sudo_code:
+        print("[+] Owner mode granted\n")
+    else:
+        print("[*] Temporary access granted\n")
 
 def list_payloads():
     print("\nAvailable Payloads:")
