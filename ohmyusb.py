@@ -13,7 +13,7 @@ ASCII_ART = r'''
 / . \| . || ' ' || | || | |<_-<| . \
 \___/|_|_||_|_|_|`_. |`___|/__/|___/
                  <___'              
-                    
+                   
 '''
 
 # Predefined payloads
@@ -100,9 +100,15 @@ def check_for_reverse_shell(payload):
 
 def save_payload(payload):
     filename = input("\nSave as (e.g., payload.txt): ").strip()
-    with open(filename, 'w') as f:
-        f.write(payload)
-    print(f"Payload saved to {filename}")
+    if not filename:
+        print("[!] No filename given. Payload was not saved.")
+        return
+    try:
+        with open(filename, 'w') as f:
+            f.write(payload)
+        print(f"Payload saved to {filename}")
+    except Exception as e:
+        print(f"[!] Error saving file: {e}")
 
 def main():
     print(ASCII_ART)
