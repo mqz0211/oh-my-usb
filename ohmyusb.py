@@ -5,18 +5,17 @@ import warnings
 import base64
 import time
 import getpass
+import datetime
 
 # Suppress syntax warnings
 warnings.filterwarnings("ignore", category=SyntaxWarning)
 
 ASCII_ART = r'''
-
-      _                         _   
+     _                         _   
  ___ | |_ ._ _ _  _ _  _ _  ___| |_ 
 / . \| . || ' ' || | || | |<_-<| . \
 \___/|_|_||_|_|_|`_. |`___|/__/|___/
-                 <___'              
-               
+                 <___'                   
 '''
 
 # Predefined payloads
@@ -60,24 +59,6 @@ ENTER
 '''
 }
 
-def authorize():
-    print("\nAuthorization Required")
-    sudo_code = base64.b64decode("c3Vkbw==").decode()  
-    usb_code = base64.b64decode("dXNi").decode()       
-    start_time = time.time()
-    entered = getpass.getpass("Enter authorization code (60s limit): ").strip()
-    elapsed = time.time() - start_time
-    if elapsed > 60:
-        print("[!] Authorization timed out. Exiting...")
-        exit(1)
-    if entered not in [sudo_code, usb_code]:
-        print("[!] Unauthorized access. Exiting...")
-        exit(1)
-    if entered == sudo_code:
-        print("[+] Owner mode granted\n")
-    else:
-        print("[*] Temporary access granted\n")
-
 def list_payloads():
     print("\nAvailable Payloads:")
     for i, key in enumerate(PAYLOADS.keys(), 1):
@@ -119,20 +100,40 @@ def check_for_reverse_shell(payload):
         print("\n[!] This looks like a reverse shell payload. Example listener:")
         print("    nc -lvnp 4444")
 
+def sandbox_simulation(payload):
+    print("\n[Simulation Mode] Previewing keystrokes:")
+    for line in payload.strip().splitlines():
+        print(f">> {line}")
+        time.sleep(0.1)
+
 def save_payload(payload):
-    filename = input("\nSave as (e.g., payload.txt): ").strip()
+    default_name = f"payload_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
+    filename = input(f"\nSave as (default: {default_name}): ").strip()
     if not filename:
-        print("[!] No filename given. Payload was not saved.")
-        return
+        filename = default_name
     try:
         with open(filename, 'w') as f:
             f.write(payload)
         print(f"Payload saved to {filename}")
+
+        # Check for mounted USB drives
+        media_path = "/media"
+        if os.path.exists(media_path):
+            for root, dirs, files in os.walk(media_path):
+                for usb in dirs:
+                    usb_path = os.path.join(root, usb)
+                    try:
+                        usb_dest = os.path.join(usb_path, filename)
+                        with open(usb_dest, 'w') as f:
+                            f.write(payload)
+                        print(f"[+] Auto-copied to USB: {usb_dest}")
+                        return
+                    except:
+                        continue
     except Exception as e:
         print(f"[!] Error saving file: {e}")
 
 def main():
-    authorize()
     print(ASCII_ART)
     print("Evil USB Payload Generator")
     print("[1] Use preset payload")
@@ -166,6 +167,9 @@ def main():
         print("\n[!] Warning: Destructive command detected in payload!")
 
     check_for_reverse_shell(payload)
+
+    if input("Simulate payload now? (y/n): ").lower() == 'y':
+        sandbox_simulation(payload)
 
     save_payload(payload)
 
