@@ -6,6 +6,7 @@ import base64
 import time
 import getpass
 import datetime
+import shutil
 
 # Suppress syntax warnings
 warnings.filterwarnings("ignore", category=SyntaxWarning)
@@ -15,7 +16,7 @@ ASCII_ART = r'''
  ___ | |_ ._ _ _  _ _  _ _  ___| |_ 
 / . \| . || ' ' || | || | |<_-<| . \
 \___/|_|_||_|_|_|`_. |`___|/__/|___/
-                 <___'                   
+                 <___'  
 '''
 
 # Predefined payloads
@@ -106,6 +107,40 @@ def sandbox_simulation(payload):
         print(f">> {line}")
         time.sleep(0.1)
 
+def export_arduino_sketch(payload):
+    filename = f"arduino_payload_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.ino"
+    sketch = """
+#include "DigiKeyboard.h"
+
+void setup() {
+  DigiKeyboard.sendKeyStroke(0);
+  delay(500);
+"""
+    for line in payload.strip().splitlines():
+        if line.startswith("STRING"):
+            text = line[7:].strip().replace('"', '\"')
+            sketch += f"  DigiKeyboard.print(\"{text}\");\n"
+        elif line.startswith("DELAY"):
+            delay_val = line[6:].strip()
+            sketch += f"  delay({delay_val});\n"
+        elif line == "ENTER":
+            sketch += "  DigiKeyboard.sendKeyStroke(KEY_ENTER);\n"
+    sketch += "}\nvoid loop() {}"
+    with open(filename, 'w') as f:
+        f.write(sketch)
+    print(f"[+] Arduino sketch exported as {filename}")
+
+def export_base64(payload):
+    encoded = base64.b64encode(payload.encode()).decode()
+    print("\n[Base64 Encoded Payload]\n")
+    print(encoded)
+
+def export_ducky_format(payload):
+    filename = f"ducky_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
+    with open(filename, 'w') as f:
+        f.write(payload)
+    print(f"[+] Rubber Ducky compatible script saved as {filename}")
+
 def save_payload(payload):
     default_name = f"payload_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
     filename = input(f"\nSave as (default: {default_name}): ").strip()
@@ -116,20 +151,18 @@ def save_payload(payload):
             f.write(payload)
         print(f"Payload saved to {filename}")
 
-        # Check for mounted USB drives
-        media_path = "/media"
-        if os.path.exists(media_path):
-            for root, dirs, files in os.walk(media_path):
-                for usb in dirs:
-                    usb_path = os.path.join(root, usb)
-                    try:
-                        usb_dest = os.path.join(usb_path, filename)
-                        with open(usb_dest, 'w') as f:
-                            f.write(payload)
-                        print(f"[+] Auto-copied to USB: {usb_dest}")
-                        return
-                    except:
-                        continue
+        media_dirs = ["/media", "/run/media"]
+        for base in media_dirs:
+            if os.path.exists(base):
+                for root, dirs, _ in os.walk(base):
+                    for usb in dirs:
+                        try:
+                            usb_path = os.path.join(root, usb, filename)
+                            shutil.copy(filename, usb_path)
+                            print(f"[+] Auto-copied to USB: {usb_path}")
+                            return
+                        except:
+                            continue
     except Exception as e:
         print(f"[!] Error saving file: {e}")
 
@@ -172,6 +205,15 @@ def main():
         sandbox_simulation(payload)
 
     save_payload(payload)
+
+    if input("Export as Arduino sketch? (y/n): ").lower() == 'y':
+        export_arduino_sketch(payload)
+
+    if input("Export as Ducky script? (y/n): ").lower() == 'y':
+        export_ducky_format(payload)
+
+    if input("Print base64-encoded version? (y/n): ").lower() == 'y':
+        export_base64(payload)
 
 if __name__ == "__main__":
     main()
