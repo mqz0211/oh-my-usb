@@ -28,7 +28,7 @@ A stealthy Python-powered BadUSB payload generator designed for penetration test
 ## 📂 Installation
 
 ```bash
-git clone https://github.com/yourusername/oh-my-usb.git
+git clone https://github.com/mqz0211/oh-my-usb.git
 cd oh-my-usb
 python3 ohmyusb.py
 ```
