@@ -1,3 +1,5 @@
+**IMPORTANT: Please read the [End User License Agreement (EULA)](EULA.md) before using this software. By using this tool, you agree to the terms outlined in the EULA.** 
+---
 # Oh My USB 🔌🦆
 
 A stealthy Python-powered BadUSB payload generator designed for penetration testers, red teamers, and hardware hackers.
