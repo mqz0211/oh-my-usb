@@ -52,9 +52,9 @@ Choose an option (1 or 2): 1
 Available Payloads:
 [1] Reverse Shell
 [2] Keylogger
-[3] Open Website
-[4] Wifi Reconfig
-[5] Self Destruct
+[3] Open Website (coming soom
+[4] Wifi Reconfig(Coming soon
+[5] Self Destruct(v2.0)
 
 Select a payload number to generate: 1
 Enable stealth mode? (y/n): y
